@@ -1,5 +1,5 @@
-import React from "react";
-
+import React,{useState,useEffect} from "react";
+import api from './services/api';
 import {
   SafeAreaView,
   View,
@@ -11,16 +11,52 @@ import {
 } from "react-native";
 
 export default function App() {
+  const [repositories,setRepositories]=useState([]);
+
+  useEffect(()=>{
+    api.get('repositories').then(response=>{
+      setRepositories(response.data);
+    })
+  },[])
+
   async function handleLikeRepository(id) {
-    // Implement "Like Repository" functionality
+    const response=await api.post(`repositories/${id}/like`);
+      
+    const likedRepository=response.data;
+
+    const repositoriesUpdated = repositories.map(repository => {
+      if (repository.id === id) {
+        return likedRepository;
+      } else {
+        return repository;
+      }
+    });
+
+    setRepository(repositoriesUpdated);
   }
 
   return (
     <>
       <StatusBar barStyle="light-content" backgroundColor="#7159c1" />
       <SafeAreaView style={styles.container}>
-        <View style={styles.repositoryContainer}>
-          <Text style={styles.repository}>Repository 1</Text>
+        <FlatList
+          data={repositories}
+          keyExtractor={repository=>repository.id}
+          renderItem={({item})=>{
+            return (
+              <>
+                <Text>{item.title}</Text>
+                <Text>{item.likes}</Text>
+                <TouchableOpacity style={styles.button} onPress={handleLikeRepository(item.id)}>
+                  <Text style={styles.buttonText}>Curtir</Text>
+                </TouchableOpacity>
+              </>
+            )
+          }}
+        />
+        {/* <View style={styles.repositoryContainer}>
+        {repositories.map(repository=>
+          <Text style={styles.repository} key={repository.id}>{repository.title} 1</Text>
 
           <View style={styles.techsContainer}>
             <Text style={styles.tech}>
@@ -49,7 +85,8 @@ export default function App() {
           >
             <Text style={styles.buttonText}>Curtir</Text>
           </TouchableOpacity>
-        </View>
+         )} 
+        </View> */}
       </SafeAreaView>
     </>
   );
